@@ -1,7 +1,8 @@
-const bcrypt = require('bcryptjs');
-
 const router = require('express').Router();
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
+const { jwtSecret } = require('../config/secrets');
 const Users = require('../users/users-model');
 
 router.post('/register', (req, res) => {
@@ -33,12 +34,9 @@ router.post('/login', (req, res) => {
   Users.findBy(userData.username).first()
     .then(user => {
       if (user && bcrypt.compareSync(userData.password, user.password)) {
-        req.session.user = {
-          id: user.id,
-          username: user.username
-        };
+        const token = generateToken(user);
 
-        res.status(200).cookie('user_id', user.id).json({ message: `Welcome ${user.username}` });
+        res.status(200).cookie('user_id', user.id).json({ message: `Welcome ${user.username}`, token });
       } else {
         res.status(401).json({ message: "Invalid credentials" });
       };
@@ -60,5 +58,19 @@ router.get('/logout', (req, res) => {
     res.status(500).json({ message: "Already logged out" });
   };
 });
+
+function generateToken(user) {
+  const payload = {
+    subject: user.id,
+    username: user.username,
+    department: user.department
+  };
+
+  const options = {
+    expiresIn: '1h'
+  };
+
+  return jwt.sign(payload, jwtSecret, options)
+}
 
 module.exports = router;
