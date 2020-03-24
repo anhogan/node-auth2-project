@@ -12,7 +12,9 @@ router.post('/register', (req, res) => {
 
   Users.add(newUser)
     .then(user => {
-      res.status(201).json(user);
+      const token = generateToken(user);
+
+      res.status(201).json({ user, token });
     })
     .catch(error => {
       res.status(500).json({ message: "The user could not be registered", error });
@@ -52,8 +54,6 @@ router.get('/logout', (req, res) => {
 function generateToken(user) {
   const payload = {
     subject: user.id
-    // username: user.username,
-    // department: user.department
   };
 
   const options = {
