@@ -16,12 +16,11 @@ function findBy(filter) {
 };
 
 function findById(id) {
-  return db('users').where(id).select('id', 'username').first();
+  return db('users').where({ id }).select('id', 'username').first();
 };
 
-function add(user) {
-  return db('users').insert(user)
-    .then(id => {
-      return findById(id[0]);
-    });
+async function add(user) {
+  const [id] = await db('users').insert(user);
+
+  return findById(id);
 };
