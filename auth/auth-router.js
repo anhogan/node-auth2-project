@@ -22,11 +22,11 @@ router.post('/register', (req, res) => {
 });
 
 router.post('/login', (req, res) => {
-  const userData = req.body;
+  let { username, password } = req.body;
 
-  Users.findBy(userData.username).first()
+  Users.findBy({ username }).first()
     .then(user => {
-      if (user && bcrypt.compareSync(userData.password, user.password)) {
+      if (user && bcrypt.compareSync(password, user.password)) {
         const token = generateToken(user);
 
         res.status(200).json({ message: `Welcome ${user.username}`, token });
@@ -40,12 +40,10 @@ router.post('/login', (req, res) => {
 });
 
 router.get('/logout', (req, res) => {
-  if (req.session) {
-    if (error) {
-      res.status(500).json({ message: "Unable to log out" });
-    } else {
-      res.status(200).json({ message: "Successfully logged out" });
-    };
+  const { authorization } = req.headers;
+
+  if (authorization) {
+    res.status(200).json({ message: "Successfully logged out" });
   } else {
     res.status(500).json({ message: "Already logged out" });
   };
@@ -53,7 +51,9 @@ router.get('/logout', (req, res) => {
 
 function generateToken(user) {
   const payload = {
-    subject: user.id
+    subject: user.id,
+    username: user.username,
+    department: user.department
   };
 
   const options = {
